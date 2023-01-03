@@ -1,0 +1,274 @@
+import React, {Component, useEffect, useState} from 'react'
+import { StyleSheet, Text, View, ActivityIndicator, FlatList, Alert, RefreshControl } from 'react-native'
+import { CardSkripsi, Distance } from '../../small'
+import { connect } from 'react-redux'
+import { colors } from '../../../utils'
+import { getListSkripsi } from '../../../c_actions/A_Skripsi'
+
+
+
+// const getSkripsis = () => {
+//     if(getSkripsiResult){
+//         arr = [] 
+//         Object.keys(getSkripsiResult).map((key) => { 
+//             arr.push(getSkripsiResult[key])
+//         }) 
+
+//         setSkripsis(arr) 
+//     }else{
+//         arr = [] 
+//     }
+// }
+
+// useEffect(() =>{ 
+//     getSkripsis()
+// },[])
+// function encodedData(data){
+//     var arr = []
+//     Object.keys(data).map((key) => { 
+//         arr.push(data[key])
+//     }) 
+
+//     return arr
+// }
+ 
+ 
+// const ListSkripsi = ({dataSkripsi, getSkripsiLoading ,getSkripsiResult ,getSkripsiError, navigation}) => {
+class ListSkripsi extends Component {
+
+    constructor(props) {
+        super(props)
+    
+        this.state = {
+             skripsis: [],
+             isMoreLoading: false,
+             onEndReachedCalledDuringMomentum : false
+        }
+    } 
+
+    componentDidMount() { 
+        // this._unsubscribe = this.props.navigation.addListener('focus', () => { 
+            // const {idLiga, keyword} = this.props
+        this.props.dispatch(getListSkripsi(false))
+        // });
+    }
+
+    componentDidUpdate(prevProps){
+        const { getSkripsiResult } = this.props
+        const { skripsis } = this.state
+ 
+        if(getSkripsiResult && prevProps.getSkripsiResult !== getSkripsiResult){
+            // this.props.dispatch(getListSkripsi(false))
+
+            console.log(getSkripsiResult)
+
+            this.setState({
+                isMoreLoading: false
+            })
+
+            var arr = []
+            console.log("do update")
+             
+            if(skripsis.length!==0){  
+                arr = skripsis 
+            } 
+
+            Object.keys(getSkripsiResult).map((key) => { 
+                arr.push(getSkripsiResult[key])
+            }) 
+
+            this.setState({ 
+                skripsis: arr
+            }) 
+ 
+        } 
+    }
+    // const [isLoading, setIsLoading] = useState(false)
+    // const [isMoreLoading, setIsMoreLoading] = useState(false)
+    // const [skripsis, setSkripsis] = useState([])
+
+    // let onEndReachedCalledDuringMomentum = false;
+
+    // console.log("loading",getSkripsiLoading)
+    // console.log("result",getSkripsiResult)
+    
+  
+    // var arr = []
+
+    // if(getSkripsiResult){
+    //     arr = encodedData(getSkripsiResult)
+    // }
+    // 
+
+
+    // getSkripsis(){
+    //     const { getSkripsiResult, skripsis } = this.props 
+
+    //     if(getSkripsiResult){ 
+    //         var arr = []
+    //         Object.keys(getSkripsiResult).map((key) => { 
+    //             arr.push(getSkripsiResult[key])
+    //         }) 
+ 
+             
+    //     } 
+    // }
+  
+    render(){
+        const {  getSkripsiLoading ,getSkripsiResult ,getSkripsiError, navigation } = this.props;
+        const { skripsis, isMoreLoading, onEndReachedCalledDuringMomentum } = this.state
+   
+        var renderItem = ({item}) => {   
+            return(
+                <CardSkripsi
+                    key={item.uid}
+                    dataSkripsi={item}
+                    navigation={navigation} /> 
+            )   
+        }
+
+        var renderLoader = () => {
+            if( isMoreLoading ) { 
+                return( 
+                    <View style={styles.loaderStyle}> 
+                        <ActivityIndicator size="large" color="#aaa"/>
+                    </View> 
+                )  
+            } 
+        }
+
+        var loadMoreItem = () => {
+            console.log("load more")
+            // console.log(isMoreLoading)
+            Alert.alert('end')  
+            this.setState({
+                isMoreLoading: true
+            })
+
+            var getMore = skripsis.slice(-1)[0]['id_']
+            this.props.dispatch(getListSkripsi(false,getMore))
+        }
+
+        var onRefresh = () => {
+            // setIsLoading(true)
+            console.log("refresh")
+        }
+
+        return(
+            <View>
+                {
+                    getSkripsiResult ? ( 
+                         
+                        <FlatList
+                            data={skripsis} 
+                            keyExtractor={item => item.uid}  
+                            renderItem={renderItem}
+                            ListFooterComponent={renderLoader} 
+            
+                            // refreshControl={
+                            //     <RefreshControl
+                            //         refreshing={isLoading}
+                            //         onRefresh={onRefresh}
+                            //     />
+                            // }
+             
+
+                            onEndReachedThreshold={0.1}
+                            onMomentumScrollBegin={() => { this.setState({onEndReachedCalledDuringMomentum: false}) }}
+                            onEndReached={() => {
+                                if(!onEndReachedCalledDuringMomentum){
+                                    loadMoreItem()
+                                    // console.log("eee") 
+                                    this.setState({onEndReachedCalledDuringMomentum: true})
+                                }
+                            }}
+                        />  
+    
+                    ) : getSkripsiLoading ? (
+                        // loading
+                        <View style={styles.loading}>
+                            <ActivityIndicator color={colors.primary} />
+                        </View> 
+    
+                    ) : getSkripsiError ? (
+                        // error
+                        <Text>{getSkripsiError}</Text>
+    
+                    ) : (
+                        // kosong
+                        <Text>Data Kosong</Text> 
+                    )
+                }
+               
+            </View>
+         
+        )
+        
+        // return (
+        //     <View> 
+        //         { 
+        //             getSkripsiResult ? (
+        //                 // result
+        //                 Object.keys(getSkripsiResult).map((key) => 
+        //                 {
+        //                     return(
+        //                         <CardSkripsi
+        //                             key={key}
+        //                             dataSkripsi={getSkripsiResult[key]}
+        //                             navigation={navigation} />
+        //                     ) 
+        //                 })
+    
+        //             ) : getSkripsiLoading ? ( 
+        //                 // loading
+        //                 <View style={styles.loading}>
+        //                     <ActivityIndicator color={colors.primary} />
+        //                 </View> 
+    
+        //             ) : getSkripsiError ? (
+        //                 // error
+        //                 <Text>{getSkripsiError}</Text>
+    
+        //             ) : (
+        //                 // kosong
+        //                 <Text>Data Kosong</Text> 
+        //             )
+    
+        //             // dataSkripsi.map((skripsi) => {
+        //             //     return(
+        //             //         <CardSkripsi
+        //             //             key={skripsi.id}
+        //             //             dataSkripsi={skripsi}
+        //             //             navigation={navigation} />
+        //             //     )
+        //             // })
+        //         } 
+        //     </View>
+        // )
+    }
+
+    
+}
+
+
+const mapStateToProps = (state) => ({
+    getSkripsiLoading : state.R_Skripsi.getSkripsiLoading,
+    getSkripsiResult : state.R_Skripsi.getSkripsiResult, 
+    getSkripsiError : state.R_Skripsi.getSkripsiError,
+})
+
+export default connect(mapStateToProps, null)(ListSkripsi)
+
+const styles = StyleSheet.create({
+    // loading: {
+    //     flex: 1,
+    //     marginTop: 10,
+    //     marginBottom: 30
+    // },
+
+    loaderStyle: {
+        marginBottom: 10,
+        // marginVertical: 16,
+        alignItems: "center"
+    }
+})
